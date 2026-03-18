@@ -9,17 +9,17 @@ async def init_db():
     db = client[settings.DATABASE_NAME]
     
     # Check if admin exists
-    admin_exists = await db.users.find_one({"email": "admin@example.com"})
+    admin_exists = await db.users.find_one({"email": "admin@gmail.com"})
     if not admin_exists:
         admin_user = {
             "name": "Super Admin",
-            "email": "admin@example.com",
+            "email": "admin@gmail.com",
             "password": get_password_hash("admin123"),
             "role": UserRole.ADMIN,
             "assigned_features": []
         }
         await db.users.insert_one(admin_user)
-        print("Admin user created: admin@example.com / admin123")
+        print("Admin user created: admin@gmail.com / admin123")
     else:
         print("Admin user already exists")
 
