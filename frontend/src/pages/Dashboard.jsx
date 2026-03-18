@@ -3,8 +3,10 @@ import { docService, featureService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
   Search, FileText, Calendar, Tag,
-  Clock, Ghost, ArrowRight
+  Clock, Ghost, ArrowRight, Download, ExternalLink, FileOutput
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
@@ -38,6 +40,82 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleExportPDF = async (doc, openOnline = false) => {
+    // Create a temporary element to render the document content for PDF
+    const tempElement = document.createElement('div');
+    tempElement.className = 'p-10 bg-white text-gray-900 max-w-4xl mx-auto';
+    tempElement.style.fontFamily = 'sans-serif';
+    tempElement.style.position = 'absolute';
+    tempElement.style.left = '-9999px';
+    tempElement.style.top = '0';
+    tempElement.style.width = '210mm'; // A4 width
+    tempElement.innerHTML = `
+      <div style="margin-bottom: 30px; border-bottom: 1px solid #e5e7eb; padding-bottom: 20px;">
+        <h1 style="font-size: 24pt; font-weight: bold; margin-bottom: 10px;">${doc.title}</h1>
+        <div style="color: #6b7280; font-size: 10pt;">
+          Category: ${doc.category || 'General'} | Feature: ${features[doc.feature_id] || 'Unknown'} | v${doc.version}.0
+        </div>
+      </div>
+      <div style="line-height: 1.6; font-size: 12pt; white-space: pre-wrap;">
+        ${doc.content}
+      </div>
+    `;
+    document.body.appendChild(tempElement);
+
+    try {
+      const canvas = await html2canvas(tempElement, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      
+      if (openOnline) {
+        window.open(pdf.output('bloburl'), '_blank');
+      } else {
+        pdf.save(`${doc.title.replace(/\s+/g, '_')}.pdf`);
+      }
+    } catch (err) {
+      console.error('PDF Export Error:', err);
+    } finally {
+      document.body.removeChild(tempElement);
+    }
+  };
+
+  const handleExportDoc = (doc) => {
+    const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export DOC</title></head><body>";
+    const footer = "</body></html>";
+    const sourceHTML = header + `
+      <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h1 style="font-size: 24pt; margin-bottom: 5px;">${doc.title}</h1>
+        <p style="color: #666; font-size: 10pt; margin-bottom: 20px;">Category: ${doc.category || 'General'} | v${doc.version}.0</p>
+        <div style="font-size: 12pt; line-height: 1.6;">
+          ${doc.content.split('\n').map(p => `<p>${p}</p>`).join('')}
+        </div>
+      </div>
+    ` + footer;
+    
+    const blob = new Blob(['\ufeff', sourceHTML], {
+      type: 'application/msword'
+    });
+    
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${doc.title.replace(/\s+/g, '_')}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handleSearch = async (e) => {
@@ -138,14 +216,40 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    {/* Read More */}
-                    <Link
-                      to={`/documents/${doc.id}`}
-                      className="inline-flex items-center gap-2 text-blue-700 font-medium mt-2"
-                    >
-                      Read More
-                      <ArrowRight size={14} />
-                    </Link>
+                    {/* Actions */}
+                    <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-100">
+                      <Link
+                        to={`/documents/${doc.id}`}
+                        className="inline-flex items-center gap-2 text-blue-700 font-bold text-sm group"
+                      >
+                        Read More
+                        <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                      </Link>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleExportPDF(doc, true)}
+                          title="Open PDF"
+                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                        >
+                          <ExternalLink size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleExportDoc(doc)}
+                          title="Download Word (DOC)"
+                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                        >
+                          <FileOutput size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleExportPDF(doc, false)}
+                          title="Download PDF"
+                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                        >
+                          <Download size={14} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}

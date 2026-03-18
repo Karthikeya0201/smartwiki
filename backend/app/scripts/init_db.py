@@ -16,6 +16,7 @@ async def init_db():
             "email": "admin@gmail.com",
             "password": get_password_hash("admin123"),
             "role": UserRole.ADMIN,
+            "is_active": True,
             "assigned_features": []
         }
         await db.users.insert_one(admin_user)

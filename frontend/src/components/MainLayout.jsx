@@ -15,7 +15,7 @@ const MainLayout = ({ children }) => {
       <Sidebar />
 
       {/* Primary Content Terminal */}
-      <main className="flex-1 transition-all duration-500 lg:pl-64 relative z-10">
+      <main className="flex-1 h-full overflow-y-auto transition-all duration-500 lg:pl-64 relative z-10">
         {/* <motion.div 
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}

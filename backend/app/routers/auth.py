@@ -39,5 +39,11 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    if not user.get("is_active", True):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is inactive. Please contact admin for access."
+        )
+    
     access_token = create_access_token(subject=str(user["_id"]))
     return {"access_token": access_token, "token_type": "bearer"}

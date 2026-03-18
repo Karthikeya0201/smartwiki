@@ -10,6 +10,7 @@ class UserBase(BaseModel):
     name: str
     email: EmailStr
     role: UserRole = UserRole.USER
+    is_active: bool = False
     assigned_features: List[str] = []
 
 class UserCreate(UserBase):
@@ -19,6 +20,7 @@ class UserUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
     role: Optional[UserRole] = None
+    is_active: Optional[bool] = None
     assigned_features: Optional[List[str]] = None
 
 class UserInDB(UserBase):

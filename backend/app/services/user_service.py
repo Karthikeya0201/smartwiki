@@ -44,3 +44,27 @@ class UserService:
             {"$set": {"assigned_features": feature_ids}}
         )
         return await self.get_by_id(user_id)
+
+    async def update_role(self, user_id: str, role: str):
+        if not ObjectId.is_valid(user_id):
+            return None
+        await self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"role": role}}
+        )
+        return await self.get_by_id(user_id)
+
+    async def update_status(self, user_id: str, is_active: bool):
+        if not ObjectId.is_valid(user_id):
+            return None
+        await self.collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"is_active": is_active}}
+        )
+        return await self.get_by_id(user_id)
+
+    async def delete(self, user_id: str):
+        if not ObjectId.is_valid(user_id):
+            return False
+        result = await self.collection.delete_one({"_id": ObjectId(user_id)})
+        return result.deleted_count > 0

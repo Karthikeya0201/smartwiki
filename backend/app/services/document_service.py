@@ -16,7 +16,8 @@ class DocumentService:
         
         query = {"_id": ObjectId(doc_id)}
         if feature_access is not None:
-             query["feature_id"] = {"$in": feature_access}
+             # User is not admin: Only can see if it's public
+             query["is_public"] = True
 
         doc = await self.collection.find_one(query)
         if doc:
@@ -71,7 +72,8 @@ class DocumentService:
         docs = []
         query = {}
         if feature_access is not None:
-            query["feature_id"] = {"$in": feature_access}
+            # User is not admin: Only see public docs
+            query["is_public"] = True
         
         cursor = self.collection.find(query).skip(skip).limit(limit)
         async for doc in cursor:
@@ -99,7 +101,7 @@ class DocumentService:
         if feature_access is not None:
             query = {
                 "$and": [
-                    {"feature_id": {"$in": feature_access}},
+                    {"is_public": True},
                     search_query
                 ]
             }

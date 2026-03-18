@@ -44,6 +44,9 @@ export const userService = {
   getAll: () => api.get('/users'),
   getMe: () => api.get('/me'),
   assignFeatures: (userId, featureIds) => api.put(`/assign-features/${userId}`, featureIds),
+  updateRole: (userId, role) => api.put(`/update-role/${userId}?role=${role}`),
+  updateStatus: (userId, isActive) => api.put(`/update-status/${userId}?is_active=${isActive}`),
+  delete: (userId) => api.delete(`/users/${userId}`),
 };
 
 export const featureService = {

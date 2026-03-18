@@ -8,6 +8,7 @@ class DocumentBase(BaseModel):
     feature_id: str
     category: str
     version: int = 1
+    is_public: bool = True
 
 class DocumentCreate(DocumentBase):
     pass
@@ -18,6 +19,7 @@ class DocumentUpdate(BaseModel):
     feature_id: Optional[str] = None
     category: Optional[str] = None
     version: Optional[int] = None
+    is_public: Optional[bool] = None
 
 class DocumentInDB(DocumentBase):
     id: str = Field(alias="_id")

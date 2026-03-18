@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from app.database.mongodb import get_database
 from app.services.user_service import UserService
-from app.schemas.user import UserResponse, UserUpdate
+from app.schemas.user import UserResponse, UserUpdate, UserRole
 from app.core.deps import get_current_active_admin, get_current_user
 
 router = APIRouter(tags=["Users"])
@@ -31,3 +31,38 @@ async def assign_features(
     if not updated_user:
         raise HTTPException(status_code=404, detail="User not found")
     return updated_user
+
+@router.put("/update-role/{user_id}", response_model=UserResponse, dependencies=[Depends(get_current_active_admin)])
+async def update_role(
+    user_id: str,
+    role: UserRole,
+    db = Depends(get_database)
+):
+    user_service = UserService(db)
+    updated_user = await user_service.update_role(user_id, role.value)
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return updated_user
+
+@router.put("/update-status/{user_id}", response_model=UserResponse, dependencies=[Depends(get_current_active_admin)])
+async def update_status(
+    user_id: str,
+    is_active: bool,
+    db = Depends(get_database)
+):
+    user_service = UserService(db)
+    updated_user = await user_service.update_status(user_id, is_active)
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return updated_user
+
+@router.delete("/users/{user_id}", dependencies=[Depends(get_current_active_admin)])
+async def delete_user(
+    user_id: str,
+    db = Depends(get_database)
+):
+    user_service = UserService(db)
+    success = await user_service.delete(user_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"status": "success"}
